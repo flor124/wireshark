@@ -49,6 +49,7 @@ static int hf_eap_type_nak = -1;
 static int hf_eap_identity = -1;
 static int hf_eap_identity_actual_len = -1;
 static int hf_eap_identity_wlan_prefix = -1;
+static int hf_eap_identity_wlan_kpabe_prefix = -1;
 static int hf_eap_identity_wlan_mcc = -1;
 static int hf_eap_identity_wlan_mcc_mnc = -1;
 
@@ -199,8 +200,10 @@ const value_string eap_identity_wlan_prefix_vals[] = {
   { '6', "EAP-AKA Prime Permanent" },
   { '7', "EAP-AKA Prime Pseudonym" },
   { '8', "EAP-AKA Prime Reauth ID" },
+  { '9', "EAP KPABE Encrypted" },
   { 0, NULL }
 };
+#define EAP_IDENTITY_KPABE '9'
 
 const value_string eap_sim_subtype_vals[] = {
   { SIM_START,             "Start" },
@@ -590,6 +593,13 @@ dissect_eap_identity_wlan(tvbuff_t *tvb, packet_info* pinfo, proto_tree* tree, i
   eap_identity_prefix = tokens[0][0];
   proto_tree_add_uint(eap_identity_tree, hf_eap_identity_wlan_prefix,
     tvb, offset, 1, eap_identity_prefix);
+
+  if (eap_identity_prefix == EAP_IDENTITY_KPABE) {
+    guint8 eap_kpabe_identity_prefix;
+    eap_kpabe_identity_prefix = tokens[0][1];
+    proto_tree_add_uint(eap_identity_tree, hf_eap_identity_wlan_kpabe_prefix, tvb, offset,
+      1, eap_kpabe_identity_prefix);
+  }
 
   dissect_e212_utf8_imsi(tvb, pinfo, eap_identity_tree, offset + 1, (guint)strlen(tokens[0]) - 1);
 
@@ -1359,6 +1369,11 @@ proto_register_eap(void)
 
     { &hf_eap_identity_wlan_prefix, {
       "WLAN Identity Prefix", "eap.identity.wlan.prefix",
+      FT_CHAR, BASE_HEX, VALS(eap_identity_wlan_prefix_vals), 0x0,
+      NULL, HFILL }},
+
+    { &hf_eap_identity_wlan_kpabe_prefix, {
+      "WLAN Identity KPABE Prefix", "eap.identity.wlan.kpabe.prefix",
       FT_CHAR, BASE_HEX, VALS(eap_identity_wlan_prefix_vals), 0x0,
       NULL, HFILL }},
 
