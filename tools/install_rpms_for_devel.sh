@@ -45,6 +45,13 @@ then
 	NGHTTP2="nghttp2"
 	# SUSE doesn't split the pod2* commands into a separate package like RH
 	PERLPODS=""
+	GEOIP="libGeoIP-devel"
+	GNUTLS="libgnutls-devel"
+	GETTEXT="gettext-tools"
+	QT5="libqt5-linguist-devel libqt5-qtsvg-devel libqt5-qtmultimedia-devel
+		libQt5PrintSupport-devel"
+	CAP_PROGS="libcap-progs"
+	NL="libnl3-devel"
 else
 	if [ ! -r /etc/redhat-release ]
 	then
@@ -69,13 +76,25 @@ else
 	CARES="c-ares-devel c-ares"
 	NGHTTP2="libnghttp2"
 	PERLPODS="perl-podlators"
+	GEOIP="GeoIP-devel"
+	GNUTLS="gnutls-devel"
+	GETTEXT="gettext-devel"
+	QT5="qt5-linguist qt5-qtsvg-devel"
+	NL="nl-devel"
 fi
 
 PKGS="autoconf automake libtool gcc flex bison python perl $GLIB2
 $PCAP $ZLIB lua-devel lua $CARES $GTK3 $GTK2 desktop-file-utils $QT fop
-asciidoc git git-review $PERLPODS libnghttp2-devel $NGHTTP2 $SNAPPY $LZ4"
+asciidoc git git-review $PERLPODS"
+
+PKGS_OPT="libnghttp2-devel $NGHTTP2 $SNAPPY $LZ4 libcap $CAP_PROGS
+libcap-devel lynx $GEOIP libgcrypt-devel $GNUTLS $GETTEXT libssh-devel
+krb5-devel perl-Parse-Yapp sbc-devel libsmi-devel $QT5"
 
 echo "Run this command (as root):"
 echo
 echo $INSTALL_CMD install $PKGS
-
+echo
+echo "To install optional packages:"
+echo
+echo $INSTALL_CMD install $PKGS_OPT
