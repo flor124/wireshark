@@ -45,8 +45,6 @@
 
 #include <QDebug>
 
-#ifdef HAVE_LIBPCAP
-
 #include "ui/capture_ui_utils.h"
 
 #include <ui/qt/models/path_chooser_delegate.h>
@@ -211,7 +209,9 @@ void ManageInterfacesDialog::updateWidgets()
 
 void ManageInterfacesDialog::on_buttonBox_accepted()
 {
+#ifdef HAVE_LIBPCAP
     sourceModel->save();
+#endif
 #ifdef HAVE_PCAP_REMOTE
     remoteAccepted();
 #endif
@@ -220,6 +220,7 @@ void ManageInterfacesDialog::on_buttonBox_accepted()
     emit ifsChanged();
 }
 
+#ifdef HAVE_LIBPCAP
 void ManageInterfacesDialog::on_addPipe_clicked()
 {
     interface_t device;
@@ -240,10 +241,14 @@ void ManageInterfacesDialog::on_addPipe_clicked()
     device.if_info.name = g_strdup(device.name);
     device.if_info.type = IF_PIPE;
 
+#ifdef HAVE_LIBPCAP
     sourceModel->addDevice(&device);
+#endif
     updateWidgets();
 }
+#endif
 
+#ifdef HAVE_LIBPCAP
 void ManageInterfacesDialog::on_delPipe_clicked()
 {
     /* Get correct selection and tell the source model to delete the itm. pipe view only
@@ -254,6 +259,7 @@ void ManageInterfacesDialog::on_delPipe_clicked()
     sourceModel->deleteDevice( pipeProxyModel->mapToSource(selIndex) );
     updateWidgets();
 }
+#endif
 
 void ManageInterfacesDialog::on_buttonBox_helpRequested()
 {
@@ -574,8 +580,6 @@ void ManageInterfacesDialog::setRemoteSettings(interface_t *iface)
     }
 }
 #endif // HAVE_PCAP_REMOTE
-
-#endif /* HAVE_LIBPCAP */
 
 /*
  * Editor modelines
