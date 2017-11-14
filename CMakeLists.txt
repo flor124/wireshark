@@ -844,6 +844,8 @@ endif()
 set(PACKAGELIST ${PACKAGELIST} LIBSSH)
 set(LIBSSH_OPTIONS "0.6")
 
+set(PACKAGELIST ${PACKAGELIST} CURL)
+
 if(ENABLE_PCAP)
 	set(PACKAGELIST ${PACKAGELIST} PCAP)
 endif()
@@ -1096,6 +1098,9 @@ if(HAVE_LIBGEOIP)
 endif()
 if(LIBSSH_FOUND)
 	set(HAVE_LIBSSH 1)
+endif()
+if(CURL_FOUND)
+	set(HAVE_CURL 1)
 endif()
 if(NGHTTP2_FOUND)
 	set(HAVE_NGHTTP2 1)
@@ -1493,6 +1498,11 @@ set_package_properties(LIBSSH PROPERTIES
 	URL "https://www.libssh.org/"
 	PURPOSE "extcap remote SSH interfaces (sshdump, ciscodump)"
 )
+set_package_properties(CURL PROPERTIES
+	DESCRIPTION "Library for implementing network connections"
+	URL "https://curl.haxx.se/libcurl/"
+	PURPOSE "remote connection to Fritzbox routers"
+)
 set_package_properties(LZ4 PROPERTIES
 	DESCRIPTION "LZ4 is lossless compression algorithm used in some protocol (CQL...)"
 	URL "http://www.lz4.org"
@@ -1625,6 +1635,7 @@ set(INSTALL_FILES
 	${CMAKE_BINARY_DIR}/doc/dumpcap.html
 	${CMAKE_BINARY_DIR}/doc/editcap.html
 	${CMAKE_BINARY_DIR}/doc/extcap.html
+	${CMAKE_BINARY_DIR}/doc/fritzdump.html
 	${CMAKE_BINARY_DIR}/doc/mergecap.html
 	${CMAKE_BINARY_DIR}/doc/randpkt.html
 	${CMAKE_BINARY_DIR}/doc/randpktdump.html
@@ -1734,6 +1745,13 @@ if(WIN32)
 				"${_dll_output_dir}"
 		)
 	endif(LIBSSH_FOUND)
+	if (CURL_FOUND)
+		add_custom_command(TARGET copy_cli_dlls PRE_BUILD
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different
+				"${CURL_DLL_DIR}/${CURL_DLL}"
+				"${_dll_output_dir}"
+		)
+	endif(CURL_FOUND)
 	foreach( _dll ${GCRYPT_DLLS} )
 		add_custom_command(TARGET copy_cli_dlls PRE_BUILD
 			COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -2869,6 +2887,26 @@ if(ENABLE_EXTCAP AND BUILD_udpdump)
 	add_dependencies(extcaps udpdump)
 endif()
 
+if(ENABLE_EXTCAP AND BUILD_fritzdump AND CURL_FOUND)
+	set(fritzdump_LIBS
+		wsutil
+		${GLIB2_LIBRARIES}
+		${CMAKE_DL_LIBS}
+	)
+	set(fritzdump_FILES
+		extcap/fritzdump.c
+		extcap/extcap-base.c
+	)
+
+	add_executable(fritzdump WIN32 ${fritzdump_FILES})
+	set_extcap_executable_properties(fritzdump)
+	target_link_libraries(fritzdump ${fritzdump_LIBS})
+	install(TARGETS fritzdump RUNTIME DESTINATION ${EXTCAP_DIR})
+	add_dependencies(extcaps fritzdump)
+elseif (BUILD_fritzdump)
+	#message( WARNING "Cannot find curl, cannot build fritzdump" )
+endif()
+
 if(ENABLE_EXTCAP AND BUILD_randpktdump)
 	set(randpktdump_LIBS
 		randpkt_core
@@ -2966,6 +3004,7 @@ set(CLEAN_C_FILES
 	${sshdump_FILES}
 	${ciscodump_FILES}
 	${udpdump_FILES}
+	${fritzdump_FILES}
 )
 
 # Make sure we don't pass /WX to rc.exe. Rc doesn't have a /WX flag,

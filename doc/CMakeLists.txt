@@ -64,6 +64,7 @@ pod2manhtml(${CMAKE_CURRENT_SOURCE_DIR}/captype     1)
 pod2manhtml(${CMAKE_CURRENT_SOURCE_DIR}/dftest      1)
 pod2manhtml(${CMAKE_CURRENT_SOURCE_DIR}/dumpcap     1)
 pod2manhtml(${CMAKE_CURRENT_SOURCE_DIR}/editcap     1)
+pod2manhtml(${CMAKE_CURRENT_SOURCE_DIR}/fritzdump   1)
 pod2manhtml(${CMAKE_CURRENT_SOURCE_DIR}/mergecap    1)
 pod2manhtml(${CMAKE_CURRENT_SOURCE_DIR}/randpkt     1)
 pod2manhtml(${CMAKE_CURRENT_SOURCE_DIR}/randpktdump 1)
@@ -95,6 +96,7 @@ set(MAN1_INSTALL_FILES
 	${CMAKE_CURRENT_BINARY_DIR}/dftest.1
 	${CMAKE_CURRENT_BINARY_DIR}/dumpcap.1
 	${CMAKE_CURRENT_BINARY_DIR}/editcap.1
+	${CMAKE_CURRENT_BINARY_DIR}/fritzdump.1
 	${CMAKE_CURRENT_BINARY_DIR}/mergecap.1
 	${CMAKE_CURRENT_BINARY_DIR}/randpkt.1
 	${CMAKE_CURRENT_BINARY_DIR}/randpktdump.1
@@ -140,6 +142,7 @@ set(HTML_INSTALL_FILES
 	${CMAKE_CURRENT_BINARY_DIR}/dumpcap.html
 	${CMAKE_CURRENT_BINARY_DIR}/editcap.html
 	${CMAKE_CURRENT_BINARY_DIR}/extcap.html
+	${CMAKE_CURRENT_BINARY_DIR}/fritzdump.html
 	${CMAKE_CURRENT_BINARY_DIR}/mergecap.html
 	${CMAKE_CURRENT_BINARY_DIR}/randpkt.html
 	${CMAKE_CURRENT_BINARY_DIR}/randpktdump.html
