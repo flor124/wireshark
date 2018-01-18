@@ -712,7 +712,6 @@ sync_pipe_open_command(char** argv, int *data_read_fd,
         for (i = 0; argv[i] != NULL; i++) {
             g_free( (gpointer) argv[i]);
         }
-        g_free( (gpointer) argv);
         return -1;
     }
 
@@ -731,7 +730,6 @@ sync_pipe_open_command(char** argv, int *data_read_fd,
         for (i = 0; argv[i] != NULL; i++) {
             g_free( (gpointer) argv[i]);
         }
-        g_free( (gpointer) argv);
         return -1;
     }
 
@@ -746,7 +744,6 @@ sync_pipe_open_command(char** argv, int *data_read_fd,
         for (i = 0; argv[i] != NULL; i++) {
             g_free( (gpointer) argv[i]);
         }
-        g_free( (gpointer) argv);
         return -1;
     }
 
@@ -767,7 +764,6 @@ sync_pipe_open_command(char** argv, int *data_read_fd,
         for (i = 0; argv[i] != NULL; i++) {
             g_free( (gpointer) argv[i]);
         }
-        g_free( (gpointer) argv);
         return -1;
     }
 
@@ -810,7 +806,6 @@ sync_pipe_open_command(char** argv, int *data_read_fd,
         for (i = 0; argv[i] != NULL; i++) {
             g_free( (gpointer) argv[i]);
         }
-        g_free( (gpointer) argv);
         g_string_free(args, TRUE);
         g_free(wcommandline);
         return -1;
@@ -828,7 +823,6 @@ sync_pipe_open_command(char** argv, int *data_read_fd,
         for (i = 0; argv[i] != NULL; i++) {
             g_free( (gpointer) argv[i]);
         }
-        g_free(argv);
         return -1;
     }
 
@@ -841,7 +835,6 @@ sync_pipe_open_command(char** argv, int *data_read_fd,
         for (i = 0; argv[i] != NULL; i++) {
             g_free( (gpointer) argv[i]);
         }
-        g_free(argv);
         return -1;
     }
 
@@ -1210,6 +1203,7 @@ sync_interface_set_80211_chan(const gchar *iface, const char *freq, const gchar 
 
     ret = sync_pipe_run_command(argv, data, primary_msg, secondary_msg, update_cb);
     g_free(opt);
+    g_free(argv);
     return ret;
 }
 
