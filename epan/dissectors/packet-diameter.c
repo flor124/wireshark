@@ -43,11 +43,11 @@
 #include <epan/expert.h>
 #include <epan/tap.h>
 #include <epan/srt_table.h>
-#include <epan/exported_pdu.h>
 #include <epan/diam_dict.h>
 #include <epan/sctpppids.h>
 #include <epan/show_exception.h>
 #include <epan/to_str.h>
+#include <exported_pdu/exported_pdu.h>
 #include <wsutil/filesystem.h>
 #include <wsutil/report_message.h>
 #include "packet-tcp.h"

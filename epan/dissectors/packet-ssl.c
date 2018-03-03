@@ -78,7 +78,7 @@
 #include <epan/uat.h>
 #include <epan/addr_resolv.h>
 #include <epan/follow.h>
-#include <epan/exported_pdu.h>
+#include <exported_pdu/exported_pdu.h>
 #include <epan/proto_data.h>
 #include <epan/decode_as.h>
 

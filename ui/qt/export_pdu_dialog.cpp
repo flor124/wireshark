@@ -15,7 +15,7 @@
 #include <wiretap/pcap-encap.h>
 
 #include <epan/tap.h>
-#include <epan/exported_pdu.h>
+#include <exported_pdu/exported_pdu.h>
 
 #include "ui/tap_export_pdu.h"
 #include "ui/export_pdu_ui_utils.h"

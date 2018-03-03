@@ -34,11 +34,6 @@ extern "C" {
 #define EXPORT_PDU_TAP_NAME_LAYER_4 "OSI layer 4"
 #define EXPORT_PDU_TAP_NAME_LAYER_7 "OSI layer 7"
 
-/* To add dynamically an export name, call the following function
-   It returns the registered tap */
-WS_DLL_PUBLIC gint register_export_pdu_tap(const char *name);
-WS_DLL_PUBLIC GSList *get_export_pdu_tap_list(void);
-
 /**
  * This struct is used as the data part of tap_queue_packet() and contains a
  * buffer with metadata of the protocol PDU included in the tvb in the struct.
@@ -240,9 +235,7 @@ WS_DLL_PUBLIC exp_pdu_data_item_t exp_pdu_data_src_port;
 WS_DLL_PUBLIC exp_pdu_data_item_t exp_pdu_data_dst_port;
 WS_DLL_PUBLIC exp_pdu_data_item_t exp_pdu_data_orig_frame_num;
 
-extern void export_pdu_init(void);
-
-extern void export_pdu_cleanup(void);
+WS_DLL_PUBLIC void export_pdu_init(void);
 
 #ifdef __cplusplus
 }

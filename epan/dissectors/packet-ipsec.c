@@ -64,7 +64,7 @@ ADD: Additional generic (non-checked) ICV length of 128, 192 and 256.
 #include <epan/prefs.h>
 #include <epan/expert.h>
 #include <epan/tap.h>
-#include <epan/exported_pdu.h>
+#include <exported_pdu/exported_pdu.h>
 #include <epan/proto_data.h>
 #include <epan/decode_as.h>
 #include <epan/capture_dissectors.h>

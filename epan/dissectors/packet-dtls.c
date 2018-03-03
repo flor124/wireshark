@@ -43,9 +43,9 @@
 #include <epan/reassemble.h>
 #include <epan/uat.h>
 #include <epan/sctpppids.h>
-#include <epan/exported_pdu.h>
 #include <epan/decode_as.h>
 #include <epan/proto_data.h>
+#include <exported_pdu/exported_pdu.h>
 #include <wsutil/str_util.h>
 #include <wsutil/strtoi.h>
 #include <wsutil/utf8_entities.h>

@@ -23,7 +23,7 @@
 #include <epan/addr_resolv.h>
 #include <epan/conversation.h>
 #include <epan/dvb_chartbl.h>
-#include <epan/exported_pdu.h>
+#include <exported_pdu/exported_pdu.h>
 #include <epan/reassemble.h>
 #include <epan/prefs.h>
 #include <epan/tap.h>

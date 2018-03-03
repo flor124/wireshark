@@ -18,7 +18,7 @@
 #include "version_info.h"
 
 #include <epan/tap.h>
-#include <epan/exported_pdu.h>
+#include <exported_pdu/exported_pdu.h>
 #include <epan/epan_dissect.h>
 #include <wiretap/wtap.h>
 #include <wiretap/wtap_opttypes.h>

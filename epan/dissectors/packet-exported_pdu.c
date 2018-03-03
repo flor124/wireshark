@@ -15,7 +15,7 @@
 #include <wiretap/wtap.h>
 #include <epan/to_str.h>
 #include <epan/address_types.h>
-#include <epan/exported_pdu.h>
+#include <exported_pdu/exported_pdu.h>
 #include "packet-mtp3.h"
 #include "packet-dvbci.h"
 #include "packet-tcp.h"

@@ -46,7 +46,7 @@
 #include "expert.h"
 #include "print.h"
 #include "capture_dissectors.h"
-#include "exported_pdu.h"
+#include "exported_pdu/exported_pdu.h"
 #include "export_object.h"
 #include "stat_tap_ui.h"
 #include "follow.h"
@@ -87,6 +87,8 @@
 
 static GSList *epan_register_all_procotols = NULL;
 static GSList *epan_register_all_handoffs = NULL;
+
+static GSList *export_pdu_tap_name_list = NULL;
 
 static wmem_allocator_t *pinfo_pool_cache = NULL;
 
@@ -314,7 +316,7 @@ epan_cleanup(void)
 	packet_cleanup();
 	expert_cleanup();
 	capture_dissector_cleanup();
-	export_pdu_cleanup();
+	export_pdu_tap_cleanup();
 	cleanup_enabled_and_disabled_lists();
 	stats_tree_cleanup();
 	dtd_location(NULL);
@@ -782,6 +784,39 @@ epan_get_runtime_version_info(GString *str)
 
 	/* Gcrypt */
 	g_string_append_printf(str, ", with Gcrypt %s", gcry_check_version(NULL));
+}
+
+gint
+register_export_pdu_tap(const char *name)
+{
+	gchar *tap_name = g_strdup(name);
+	export_pdu_tap_name_list = g_slist_prepend(export_pdu_tap_name_list, tap_name);
+	return register_tap(tap_name);
+}
+
+static
+gint sort_pdu_tap_name_list(gconstpointer a, gconstpointer b)
+{
+	return g_strcmp0((const char *)a, (const char*)b);
+}
+
+static void
+free_list_element(gpointer elem, gpointer data _U_)
+{
+	g_free(elem);
+}
+
+GSList *
+get_export_pdu_tap_list(void)
+{
+	export_pdu_tap_name_list = g_slist_sort(export_pdu_tap_name_list, sort_pdu_tap_name_list);
+	return export_pdu_tap_name_list;
+}
+
+void export_pdu_tap_cleanup(void)
+{
+	g_slist_foreach(export_pdu_tap_name_list, free_list_element, NULL);
+	g_slist_free(export_pdu_tap_name_list);
 }
 
 /*

@@ -26,7 +26,7 @@
 #include <epan/sequence_analysis.h>
 #include <epan/reassemble.h>
 #include <epan/decode_as.h>
-#include <epan/exported_pdu.h>
+#include <exported_pdu/exported_pdu.h>
 #include <epan/in_cksum.h>
 #include <epan/proto_data.h>
 

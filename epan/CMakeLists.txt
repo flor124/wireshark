@@ -98,7 +98,6 @@ set(LIBWIRESHARK_PUBLIC_HEADERS
 	exceptions.h
 	expert.h
 	export_object.h
-	exported_pdu.h
 	filter_expressions.h
 	follow.h
 	frame_data.h
@@ -202,7 +201,6 @@ set(LIBWIRESHARK_NONGENERATED_FILES
 	except.c
 	expert.c
 	export_object.c
-	exported_pdu.c
 	filter_expressions.c
 	follow.c
 	frame_data.c
@@ -274,6 +272,7 @@ add_lemon_files(LEMON_FILES LIBWIRESHARK_FILES
 )
 
 set(epan_LIBS
+	exported_pdu
 	wiretap
 	wsutil
 	${CARES_LIBRARIES}

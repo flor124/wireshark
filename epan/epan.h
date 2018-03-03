@@ -275,6 +275,13 @@ WS_DLL_PUBLIC
 void
 epan_get_runtime_version_info(GString *str);
 
+/* To add dynamically an export name, call the following function
+   It returns the registered tap */
+WS_DLL_PUBLIC gint register_export_pdu_tap(const char *name);
+WS_DLL_PUBLIC GSList *get_export_pdu_tap_list(void);
+
+WS_DLL_PUBLIC void export_pdu_tap_cleanup(void);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

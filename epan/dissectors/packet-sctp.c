@@ -45,7 +45,7 @@
 #include <epan/capture_dissectors.h>
 #include <epan/prefs.h>
 #include <epan/exceptions.h>
-#include <epan/exported_pdu.h>
+#include <exported_pdu/exported_pdu.h>
 #include <epan/ipproto.h>
 #include <epan/addr_resolv.h>
 #include <epan/sctpppids.h>
