@@ -48,10 +48,6 @@ indent_size = tab
 indent_style = tab
 indent_size = tab
 
-[exported_pdu.[ch]]
-indent_style = tab
-indent_size = tab
-
 [filter_expressions.[ch]]
 indent_style = tab
 indent_size = tab

@@ -36,7 +36,7 @@
 #include <epan/conversation.h>
 #include <epan/conversation_table.h>
 #include <epan/dissector_filters.h>
-#include <epan/exported_pdu.h>
+#include <exported_pdu/exported_pdu.h>
 #include <epan/decode_as.h>
 
 void proto_register_udp(void);

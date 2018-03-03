@@ -76,6 +76,7 @@ udpdump_SOURCES = \
 
 # Libraries and plugin flags with which to link udpdump.
 udpdump_LDADD = \
+	../exported_pdu/libexported_pdu.la \
 	../writecap/libwritecap.a	\
 	../wsutil/libwsutil.la		\
 	@GLIB_LIBS@

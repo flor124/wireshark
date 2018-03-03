@@ -65,7 +65,6 @@ LIBWIRESHARK_NONGENERATED_SRC = \
 	except.c		\
 	expert.c		\
 	export_object.c		\
-	exported_pdu.c		\
 	filter_expressions.c	\
 	follow.c		\
 	frame_data.c		\
@@ -205,7 +204,6 @@ LIBWIRESHARK_INCLUDES_PUBLIC = \
 	exceptions.h		\
 	expert.h		\
 	export_object.h		\
-	exported_pdu.h		\
 	filter_expressions.h	\
 	follow.h		\
 	frame_data.h		\
@@ -318,6 +316,7 @@ libwireshark_la_LIBADD = \
 	dissectors/libfiledissectors.la		\
 	wmem/libwmem.la				\
 	$(wslua_lib)				\
+	${top_builddir}/exported_pdu/libexported_pdu.la \
 	${top_builddir}/wiretap/libwiretap.la	\
 	${top_builddir}/wsutil/libwsutil.la	\
 	@C_ARES_LIBS@		\
@@ -339,6 +338,7 @@ libwireshark_la_DEPENDENCIES = \
 	dissectors/libdirtydissectors.la	\
 	wmem/libwmem.la				\
 	$(wslua_lib)				\
+	${top_builddir}/exported_pdu/libexported_pdu.la \
 	${top_builddir}/wsutil/libwsutil.la	\
 	${top_builddir}/wiretap/libwiretap.la
 

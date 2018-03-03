@@ -2790,6 +2790,7 @@ AC_CONFIG_FILES(
   epan/ftypes/Makefile
   epan/wmem/Makefile
   epan/wslua/Makefile
+  exported_pdu/Makefile
   extcap/Makefile
   codecs/Makefile
   ui/Makefile

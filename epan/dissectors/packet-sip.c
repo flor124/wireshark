@@ -24,7 +24,7 @@
 #include <epan/packet.h>
 
 #include <epan/exceptions.h>
-#include <epan/exported_pdu.h>
+#include <exported_pdu/exported_pdu.h>
 #include <epan/expert.h>
 #include <epan/prefs.h>
 #include <epan/req_resp_hdrs.h>

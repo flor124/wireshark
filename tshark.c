@@ -94,7 +94,7 @@
 #include <epan/srt_table.h>
 #include <epan/rtd_table.h>
 #include <epan/ex-opt.h>
-#include <epan/exported_pdu.h>
+#include <exported_pdu/exported_pdu.h>
 
 #include "capture_opts.h"
 

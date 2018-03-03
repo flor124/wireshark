@@ -13,12 +13,11 @@
 #include "config.h"
 #include <glib.h>
 
+#include <exported_pdu/exported_pdu.h>
+
 #include <epan/packet.h>
-#include <epan/exported_pdu.h>
 #include <epan/address_types.h>
 #include <epan/tap.h>
-
-static GSList *export_pdu_tap_name_list = NULL;
 
 static int exp_pdu_data_ip_size(const address* addr)
 {
@@ -118,7 +117,7 @@ static guint exp_pdu_new_to_old_port_type(port_type pt)
 		return OLD_PT_BLUETOOTH;
 	}
 
-	DISSECTOR_ASSERT(FALSE);
+	g_assert(FALSE);
 	return OLD_PT_NONE;
 }
 
@@ -187,12 +186,12 @@ static int exp_pdu_data_orig_frame_num_populate_data(packet_info *pinfo, void* d
 	return exp_pdu_data_orig_frame_num_size(pinfo, data);
 }
 
-WS_DLL_PUBLIC int exp_pdu_data_dissector_table_num_value_size(packet_info *pinfo _U_, void* data _U_)
+int exp_pdu_data_dissector_table_num_value_size(packet_info *pinfo _U_, void* data _U_)
 {
 	return EXP_PDU_TAG_DISSECTOR_TABLE_NUM_VAL_LEN + 4;
 }
 
-WS_DLL_PUBLIC int exp_pdu_data_dissector_table_num_value_populate_data(packet_info *pinfo _U_, void* data, guint8 *tlv_buffer, guint32 buffer_size _U_)
+int exp_pdu_data_dissector_table_num_value_populate_data(packet_info *pinfo _U_, void* data, guint8 *tlv_buffer, guint32 buffer_size _U_)
 {
 	guint32 value = GPOINTER_TO_UINT(data);
 
@@ -245,8 +244,8 @@ export_pdu_create_tags(packet_info *pinfo, const char* proto_name, guint16 tag_t
 	int proto_str_len, proto_tag_len, buf_remaining, item_size;
 	guint8* buffer_data;
 
-	DISSECTOR_ASSERT(proto_name != NULL);
-	DISSECTOR_ASSERT((tag_type == EXP_PDU_TAG_PROTO_NAME) || (tag_type == EXP_PDU_TAG_HEUR_PROTO_NAME) || (tag_type == EXP_PDU_TAG_DISSECTOR_TABLE_NAME));
+	g_assert(proto_name != NULL);
+	g_assert((tag_type == EXP_PDU_TAG_PROTO_NAME) || (tag_type == EXP_PDU_TAG_HEUR_PROTO_NAME) || (tag_type == EXP_PDU_TAG_DISSECTOR_TABLE_NAME));
 
 	exp_pdu_data = (exp_pdu_data_t *)g_malloc(sizeof(exp_pdu_data_t));
 
@@ -295,41 +294,8 @@ export_pdu_create_tags(packet_info *pinfo, const char* proto_name, guint16 tag_t
 	return exp_pdu_data;
 }
 
-gint
-register_export_pdu_tap(const char *name)
-{
-	gchar *tap_name = g_strdup(name);
-	export_pdu_tap_name_list = g_slist_prepend(export_pdu_tap_name_list, tap_name);
-	return register_tap(tap_name);
-}
-
-static
-gint sort_pdu_tap_name_list(gconstpointer a, gconstpointer b)
-{
-	return g_strcmp0((const char *)a, (const char*)b);
-}
-
-GSList *
-get_export_pdu_tap_list(void)
-{
-	export_pdu_tap_name_list = g_slist_sort(export_pdu_tap_name_list, sort_pdu_tap_name_list);
-	return export_pdu_tap_name_list;
-}
-
 void export_pdu_init(void)
 {
-}
-
-static void
-free_list_element(gpointer elem, gpointer data _U_)
-{
-	g_free(elem);
-}
-
-void export_pdu_cleanup(void)
-{
-	g_slist_foreach(export_pdu_tap_name_list, free_list_element, NULL);
-	g_slist_free(export_pdu_tap_name_list);
 }
 
 /*

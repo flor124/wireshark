@@ -55,7 +55,7 @@ typedef struct nettrace_3gpp_32_423_file_info {
 	wtap *wth_tmp_file;
 } nettrace_3gpp_32_423_file_info_t;
 
-/* From epan/exported_pdu.h
+/* From exported_pdu/exported_pdu.h
    Port types are no longer used for conversation/endpoints so
    many of the enumerated values have been eliminated
    Since export PDU functionality is serializing them,

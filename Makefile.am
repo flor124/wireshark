@@ -410,6 +410,7 @@ wireshark_common_ldadd = \
 	ui/libui.a			\
 	ui/libui_generated.a		\
 	codecs/libwscodecs.la		\
+	exported_pdu/libexported_pdu.la \
 	wiretap/libwiretap.la		\
 	epan/libwireshark.la		\
 	wsutil/libwsutil.la		\
@@ -485,6 +486,7 @@ tshark_LDADD = \
 	caputils/libcaputils.a		\
 	ui/cli/libcliui.a		\
 	ui/libui.a			\
+	exported_pdu/libexported_pdu.la \
 	wiretap/libwiretap.la		\
 	epan/libwireshark.la		\
 	wsutil/libwsutil.la		\
@@ -841,6 +843,7 @@ DIST_SUBDIRS = \
 	capchild	\
 	caputils	\
 	codecs		\
+	exported_pdu \
 	doc		\
 	docbook		\
 	epan		\
@@ -859,6 +862,7 @@ DIST_SUBDIRS = \
 	extcap
 
 SUBDIRS = \
+	exported_pdu \
 	tools			\
 	wsutil			\
 	writecap		\
@@ -975,6 +979,7 @@ checkapi_local:
 #	$(EXTRA_wireshark_gtk_SOURCES)
 
 checkapi: checkapi_local
+	cd exported_pdu && $(MAKE) checkapi
 	cd wiretap && $(MAKE) checkapi
 	cd codecs && $(MAKE) checkapi
 	cd capchild && $(MAKE) checkapi

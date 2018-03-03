@@ -1279,6 +1279,7 @@ add_subdirectory( codecs )
 add_subdirectory( doc )
 add_subdirectory( docbook EXCLUDE_FROM_ALL )
 add_subdirectory( epan )
+add_subdirectory( exported_pdu )
 add_subdirectory( randpkt_core )
 add_subdirectory( tools/lemon )
 add_subdirectory( ui )
@@ -2878,6 +2879,7 @@ if(BUILD_udpdump)
 	set(udpdump_LIBS
 		${GLIB2_LIBRARIES}
 		${CMAKE_DL_LIBS}
+		exported_pdu
 		wsutil
 		writecap
 	)

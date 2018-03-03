@@ -36,7 +36,7 @@
 #include <epan/rtd_table.h>
 #include <epan/prefs.h>
 #include <epan/prefs-int.h>
-#include <epan/exported_pdu.h>
+#include <exported_pdu/exported_pdu.h>
 #include <epan/asn1.h>
 #include <epan/sctpppids.h>
 #include <wsutil/strtoi.h>

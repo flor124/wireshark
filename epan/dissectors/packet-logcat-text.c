@@ -16,7 +16,7 @@
 
 #include "epan/packet.h"
 #include "epan/expert.h"
-#include "epan/exported_pdu.h"
+#include "exported_pdu/exported_pdu.h"
 #include "epan/tap.h"
 #include "wiretap/logcat_text.h"
 

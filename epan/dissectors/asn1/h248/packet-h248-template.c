@@ -19,8 +19,8 @@
 #include <epan/tap.h>
 #include <epan/asn1.h>
 #include <epan/prefs.h>
-#include <epan/exported_pdu.h>
 #include <epan/address_types.h>
+#include <exported_pdu/exported_pdu.h>
 #include "packet-alcap.h"
 #include "packet-ber.h"
 #include "packet-tpkt.h"

@@ -1,0 +1,9 @@
+#
+# Editor configuration
+#
+# http://editorconfig.org/
+#
+
+[exported_pdu.[ch]]
+indent_style = tab
+indent_size = tab

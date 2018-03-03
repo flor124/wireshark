@@ -34,11 +34,6 @@ extern "C" {
 #define EXPORT_PDU_TAP_NAME_LAYER_4 "OSI layer 4"
 #define EXPORT_PDU_TAP_NAME_LAYER_7 "OSI layer 7"
 
-/* To add dynamically an export name, call the following function
-   It returns the registered tap */
-WS_DLL_PUBLIC gint register_export_pdu_tap(const char *name);
-WS_DLL_PUBLIC GSList *get_export_pdu_tap_list(void);
-
 /**
  * This struct is used as the data part of tap_queue_packet() and contains a
  * buffer with metadata of the protocol PDU included in the tvb in the struct.
@@ -211,7 +206,7 @@ typedef struct exp_pdu_data_item
  @param items PDU items to be exported
  @return filled exp_pdu_data_t struct
 */
-WS_DLL_PUBLIC exp_pdu_data_t *export_pdu_create_tags(packet_info *pinfo, const char* proto_name, guint16 tag_type, const exp_pdu_data_item_t **items);
+exp_pdu_data_t *export_pdu_create_tags(packet_info *pinfo, const char* proto_name, guint16 tag_type, const exp_pdu_data_item_t **items);
 
 /**
  Allocates and fills the exp_pdu_data_t struct with a common list of items
@@ -228,21 +223,19 @@ WS_DLL_PUBLIC exp_pdu_data_t *export_pdu_create_tags(packet_info *pinfo, const c
  @param proto_name Name of protocol that is exporting PDU
  @return filled exp_pdu_data_t struct
 */
-WS_DLL_PUBLIC exp_pdu_data_t *export_pdu_create_common_tags(packet_info *pinfo, const char *proto_name, guint16 tag_type);
+exp_pdu_data_t *export_pdu_create_common_tags(packet_info *pinfo, const char *proto_name, guint16 tag_type);
 
-WS_DLL_PUBLIC int exp_pdu_data_dissector_table_num_value_size(packet_info *pinfo, void* data);
-WS_DLL_PUBLIC int exp_pdu_data_dissector_table_num_value_populate_data(packet_info *pinfo, void* data, guint8 *tlv_buffer, guint32 buffer_size);
+int exp_pdu_data_dissector_table_num_value_size(packet_info *pinfo, void* data);
+int exp_pdu_data_dissector_table_num_value_populate_data(packet_info *pinfo, void* data, guint8 *tlv_buffer, guint32 buffer_size);
 
-WS_DLL_PUBLIC exp_pdu_data_item_t exp_pdu_data_src_ip;
-WS_DLL_PUBLIC exp_pdu_data_item_t exp_pdu_data_dst_ip;
-WS_DLL_PUBLIC exp_pdu_data_item_t exp_pdu_data_port_type;
-WS_DLL_PUBLIC exp_pdu_data_item_t exp_pdu_data_src_port;
-WS_DLL_PUBLIC exp_pdu_data_item_t exp_pdu_data_dst_port;
-WS_DLL_PUBLIC exp_pdu_data_item_t exp_pdu_data_orig_frame_num;
+exp_pdu_data_item_t exp_pdu_data_src_ip;
+exp_pdu_data_item_t exp_pdu_data_dst_ip;
+exp_pdu_data_item_t exp_pdu_data_port_type;
+exp_pdu_data_item_t exp_pdu_data_src_port;
+exp_pdu_data_item_t exp_pdu_data_dst_port;
+exp_pdu_data_item_t exp_pdu_data_orig_frame_num;
 
-extern void export_pdu_init(void);
-
-extern void export_pdu_cleanup(void);
+void export_pdu_init(void);
 
 #ifdef __cplusplus
 }

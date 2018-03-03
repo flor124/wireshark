@@ -14,7 +14,7 @@
 #include <epan/packet.h>
 #include <epan/asn1.h>
 #include <epan/tap.h>
-#include <epan/exported_pdu.h>
+#include <exported_pdu/exported_pdu.h>
 
 #include "packet-ber.h"
 #include "packet-credssp.h"
