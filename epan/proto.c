@@ -47,6 +47,10 @@
 #include <wsutil/crash_info.h>
 #include <wsutil/glib-compat.h>
 
+#ifdef HAVE_JSONGLIB
+#include <json-glib/json-glib.h>
+#endif
+
 /* Ptvcursor limits */
 #define SUBTREE_ONCE_ALLOCATION_NUMBER 8
 #define SUBTREE_MAX_LEVELS 256
@@ -9976,6 +9980,186 @@ proto_registrar_dump_fieldcount(void)
 	return (gpa_hfinfo.allocated_len > PROTO_PRE_ALLOC_HF_FIELDS_MEM);
 }
 
+#ifdef HAVE_JSONGLIB
+
+static JsonBuilder*
+elastic_add_base_mapping(JsonBuilder* builder)
+{
+	json_builder_set_member_name(builder, "template");
+	json_builder_add_string_value(builder, "packets-*");
+
+	json_builder_set_member_name(builder, "settings");
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "index.mapping.total_fields.limit");
+	json_builder_add_int_value(builder, 1000000);
+	json_builder_end_object(builder);
+
+	return builder;
+}
+
+gchar* ws_type_to_elastic(guint type _U_)
+{
+	switch(type) {
+		case FT_UINT16:
+		case FT_INT16:
+		case FT_INT32:
+		case FT_UINT32:
+		case FT_UINT24:
+		case FT_FRAMENUM:
+		case FT_UINT48:
+		case FT_INT48:
+		case FT_INT24:
+			return "integer";
+			break;
+		case FT_INT8:
+		case FT_UINT8:
+			return "short";
+			break;
+		case FT_UINT40:
+		case FT_UINT56:
+		case FT_UINT64:
+		case FT_INT64:
+			return "long";
+			break;
+		case FT_FLOAT:
+		case FT_DOUBLE:
+			return "float";
+			break;
+		case FT_IPv6:
+		case FT_IPv4:
+			return "ip";
+			break;
+		case FT_ABSOLUTE_TIME:
+		case FT_RELATIVE_TIME:
+			return "date";
+			break;
+		case FT_BYTES:
+		case FT_UINT_BYTES:
+			return "byte";
+			break;
+		case FT_BOOLEAN:
+			return "boolean";
+			break;
+		case FT_NONE:
+		case FT_STRING:
+		case FT_ETHER:
+		case FT_GUID:
+		case FT_OID:
+		case FT_STRINGZ:
+		case FT_UINT_STRING:
+		case FT_CHAR:
+		case FT_AX25:
+		case FT_REL_OID:
+		case FT_IEEE_11073_SFLOAT:
+		case FT_IEEE_11073_FLOAT:
+		case FT_STRINGZPAD:
+		case FT_PROTOCOL:
+		case FT_EUI64:
+		case FT_IPXNET:
+		case FT_SYSTEM_ID:
+		case FT_FCWWN:
+		case FT_VINES:
+			return "string";
+			break;
+		default:
+			DISSECTOR_ASSERT_NOT_REACHED();
+	}
+}
+
+/* Dumps a mapping file for ElasticSearch
+ */
+void
+proto_registrar_dump_elastic(void)
+{
+	header_field_info *hfinfo;
+	header_field_info *parent_hfinfo;
+	JsonGenerator* generator;
+	JsonBuilder* builder;
+	gsize length;
+	guint i;
+	gboolean open_object = TRUE;
+	const char* prev_proto = NULL;
+
+	builder = json_builder_new();
+	json_builder_begin_object(builder);
+	builder = elastic_add_base_mapping(builder);
+
+	json_builder_set_member_name(builder, "mappings");
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "pcap_file");
+
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "dynamic");
+	json_builder_add_boolean_value(builder, FALSE);
+
+	json_builder_set_member_name(builder, "properties");
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "timestamp");
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "type");
+	json_builder_add_string_value(builder, "date");
+	json_builder_end_object(builder);
+
+	json_builder_set_member_name(builder, "layers");
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "properties");
+	json_builder_begin_object(builder);
+
+	for (i = 0; i < gpa_hfinfo.len; i++) {
+		if (gpa_hfinfo.hfi[i] == NULL)
+			continue; /* This is a deregistered protocol or header field */
+
+		PROTO_REGISTRAR_GET_NTH(i, hfinfo);
+
+		/*
+		 * Skip the pseudo-field for "proto_tree_add_text()" since
+		 * we don't want it in the list of filterable fields.
+		 */
+		if (hfinfo->id == hf_text_only)
+			continue;
+
+		if (!proto_registrar_is_protocol(i)) {
+			PROTO_REGISTRAR_GET_NTH(hfinfo->parent, parent_hfinfo);
+
+			if (prev_proto && g_strcmp0(parent_hfinfo->abbrev, prev_proto)) {
+				json_builder_end_object(builder);
+				json_builder_end_object(builder);
+				open_object = TRUE;
+			}
+
+			prev_proto = parent_hfinfo->abbrev;
+
+			if (open_object) {
+				json_builder_set_member_name(builder, parent_hfinfo->abbrev);
+				json_builder_begin_object(builder);
+				json_builder_set_member_name(builder, "properties");
+				json_builder_begin_object(builder);
+				open_object = FALSE;
+			}
+			json_builder_set_member_name(builder, hfinfo->abbrev);
+			json_builder_begin_object(builder);
+			json_builder_set_member_name(builder, "type");
+			json_builder_add_string_value(builder, ws_type_to_elastic(hfinfo->type));
+			json_builder_end_object(builder);
+		}
+	}
+
+	json_builder_end_object(builder);
+	json_builder_end_object(builder);
+
+	json_builder_end_object(builder);
+	json_builder_end_object(builder);
+	json_builder_end_object(builder);
+	json_builder_end_object(builder);
+	json_builder_end_object(builder);
+	json_builder_end_object(builder);
+
+	generator = json_generator_new();
+	json_generator_set_pretty(generator, TRUE);
+	json_generator_set_root(generator, json_builder_get_root(builder));
+	ws_debug_printf("%s\n", json_generator_to_data(generator, &length));
+}
+#endif
 
 /* Dumps the contents of the registration database to stdout. An independent
  * program can take this output and format it into nice tables or HTML or
