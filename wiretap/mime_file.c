@@ -63,10 +63,12 @@ static const guint8 btsnoop_magic[]    = { 'b', 't', 's', 'n', 'o', 'o', 'p', 0}
 static const guint8 pcap_magic[]           = { 0xA1, 0xB2, 0xC3, 0xD4 };
 static const guint8 pcap_swapped_magic[]   = { 0xD4, 0xC3, 0xB2, 0xA1 };
 static const guint8 pcapng_premagic[]      = { 0x0A, 0x0D, 0x0D, 0x0A };
+static const guint8 webp_premagic[]        = { 'R', 'I', 'F', 'F' };
 
 /* File does not start with it */
 static const guint8 pcapng_xmagic[]         = { 0x1A, 0x2B, 0x3C, 0x4D };
 static const guint8 pcapng_swapped_xmagic[] = { 0x4D, 0x3C, 0x2B, 0x1A };
+static const guint8 webp_postmagic[]        = { 'W', 'E', 'B', 'P' };
 
 static const mime_files_t magic_files[] = {
 	{ jpeg_jfif_magic, sizeof(jpeg_jfif_magic) },
@@ -78,7 +80,8 @@ static const mime_files_t magic_files[] = {
 	{ btsnoop_magic, sizeof(btsnoop_magic) },
 	{ pcap_magic, sizeof(pcap_magic) },
 	{ pcap_swapped_magic, sizeof(pcap_swapped_magic) },
-	{ pcapng_premagic, sizeof(pcapng_premagic) }
+	{ pcapng_premagic, sizeof(pcapng_premagic) },
+	{ webp_premagic, sizeof(webp_premagic) }
 };
 
 #define	N_MAGIC_TYPES	(sizeof(magic_files) / sizeof(magic_files[0]))
@@ -191,6 +194,10 @@ mime_file_open(wtap *wth, int *err, gchar **err_info)
 				if (magic_files[i].magic == pcapng_premagic) {
 					if (memcmp(magic_buf + 8, pcapng_xmagic, sizeof(pcapng_xmagic)) &&
 							memcmp(magic_buf + 8, pcapng_swapped_xmagic, sizeof(pcapng_swapped_xmagic)))
+						continue;
+				}
+				if (magic_files[i].magic == webp_premagic) {
+					if (memcmp(magic_buf + 8, webp_postmagic, sizeof(webp_postmagic)))
 						continue;
 				}
 				found_file = TRUE;

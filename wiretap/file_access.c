@@ -142,7 +142,8 @@ static const struct file_extension_info file_type_extensions_base[] = {
 	{ "MPEG files", FALSE, "mpg;mp3" },
 	{ "Transport-Neutral Encapsulation Format", FALSE, "tnef" },
 	{ "JPEG/JFIF files", FALSE, "jpg;jpeg;jfif" },
-	{ "JavaScript Object Notation file", FALSE, "json" }
+	{ "JavaScript Object Notation file", FALSE, "json" },
+	{ "Webp files", FALSE, "webp" }
 };
 
 #define	N_FILE_TYPE_EXTENSIONS	(sizeof file_type_extensions_base / sizeof file_type_extensions_base[0])
@@ -1609,6 +1610,11 @@ static const struct file_type_subtype_info dump_open_table_base[] = {
 
 	/* WTAP_FILE_TYPE_SUBTYPE_DPA400 */
 	{ "Unigraf DisplayPort AUX channel monitor output parser", "dpa400", "bin", NULL,
+	  FALSE, FALSE, 0,
+	  NULL, NULL, NULL },
+
+	/* WTAP_FILE_TYPE_SUBTYPE_WEBP */
+	{ "Webp file format", "webp", "webp", NULL,
 	  FALSE, FALSE, 0,
 	  NULL, NULL, NULL }
 };
