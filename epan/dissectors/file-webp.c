@@ -16,6 +16,7 @@
 static gint hf_riff_marker = -1;
 static gint hf_file_size = -1;
 static gint hf_webp_marker = -1;
+static gint hf_webp_subtype = -1;
 
 static gint ett_webp = -1;
 
@@ -28,8 +29,15 @@ static dissector_handle_t webp_handle;
 #define SUBTYPE_LOSSY 1
 #define SUBTYPE_LOSSLESS 2
 
-int subtype_case(const guint8* subtype)
+
+static guint webp_subtype(tvbuff_t *tvb, guint* offset, packet_info *pinfo)
 {
+    guint8* subtype = tvb_get_string_enc(wmem_packet_scope(), tvb, *offset, 4, ENC_NA);
+    *offset += 4;
+
+    col_add_fstr(pinfo->cinfo, COL_INFO, "File Type: %s", subtype);
+
+
     if (!memcmp(subtype, "VP8 ", 4))
         return SUBTYPE_LOSSY;
     if (!memcmp(subtype, "VP8L", 4))
@@ -37,13 +45,12 @@ int subtype_case(const guint8* subtype)
     return SUBTYPE_UNKNOWN;
 }
 
-static gint
-dissect_webp(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
+static gint dissect_webp(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
     proto_tree* ti;
     proto_tree* webp_tree;
     guint offset = 0;
-    guint8* subtype;
+    dissector_handle_t vp8_handle;
 
     col_set_str(pinfo->cinfo, COL_PROTOCOL, "WEBP");
     col_clear(pinfo->cinfo, COL_INFO);
@@ -60,10 +67,12 @@ dissect_webp(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_
     proto_tree_add_item(webp_tree, hf_webp_marker, tvb, offset, 4, ENC_ASCII|ENC_NA);
     offset += 4;
 
-    subtype = tvb_get_string_enc(wmem_packet_scope(), tvb, offset, 4, ENC_NA);
-    switch(subtype_case(subtype)) {
+    proto_tree_add_item(webp_tree, hf_webp_subtype, tvb, offset, 4, ENC_ASCII|ENC_NA);
+
+    switch(webp_subtype(tvb, &offset, pinfo)) {
         case SUBTYPE_LOSSY:
-            g_print("SUBTYPE LOSSY\n");
+            vp8_handle = find_dissector("vp8");
+            // call_dissector(vp8_handle, tvb_new_subset_remaining(tvb, offset), pinfo, webp_tree);
             break;
         case SUBTYPE_LOSSLESS:
             g_print("SUBTYPE LOSSLESS\n");
@@ -76,15 +85,13 @@ dissect_webp(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_
     return tvb_captured_length(tvb);
 }
 
-static gboolean
-dissect_webp_heur(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_)
+static gboolean dissect_webp_heur(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_)
 {
     return dissect_webp(tvb, pinfo, tree, NULL) > 0;
 }
 
 
-void
-proto_register_webp(void)
+void proto_register_webp(void)
 {
     /*
      * Setup list of header fields.
@@ -96,7 +103,7 @@ proto_register_webp(void)
                 "webp.riff_marker",
                 FT_STRING, BASE_NONE,
                 0x00, 0x00,
-                "RIFF marker",
+                "The RIFF marker",
                 HFILL
             }
         },
@@ -110,11 +117,20 @@ proto_register_webp(void)
             }
         },
         { &hf_webp_marker,
-            {   "Wwbp marker",
+            {   "Webp marker",
                 "webp.marker",
                 FT_STRING, BASE_NONE,
                 0x00, 0x00,
-                "WEBP marker",
+                "The WEBP marker",
+                HFILL
+            }
+        },
+        { &hf_webp_subtype,
+            {   "Webp subtype",
+                "webp.subtype",
+                FT_STRING, BASE_NONE,
+                0x00, 0x00,
+                "The marker of the WEBP subtype",
                 HFILL
             }
         }
@@ -142,8 +158,7 @@ proto_register_webp(void)
 }
 
 
-void
-proto_reg_handoff_webp(void)
+void proto_reg_handoff_webp(void)
 {
     dissector_add_string("media_type", "image/webp", webp_handle);
     heur_dissector_add("http", dissect_webp_heur, "WEBP file in HTTP", "webp_http", proto_webp, HEURISTIC_ENABLE);
