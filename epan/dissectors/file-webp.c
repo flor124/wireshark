@@ -12,13 +12,18 @@
 #include "config.h"
 
 #include <epan/packet.h>
+#include <packet-vp8.h>
 
-static gint hf_riff_marker = -1;
-static gint hf_file_size = -1;
+static gint hf_webp_riff_marker = -1;
+static gint hf_webp_file_size = -1;
 static gint hf_webp_marker = -1;
 static gint hf_webp_subtype = -1;
 
+static gint hf_webp_header = -1;
+static gint hf_webp_frame_type = -1;
+
 static gint ett_webp = -1;
+static gint ett_header = -1;
 
 /* Initialize the protocol and registered fields */
 static int proto_webp = -1;
@@ -29,6 +34,16 @@ static dissector_handle_t webp_handle;
 #define SUBTYPE_LOSSY 1
 #define SUBTYPE_LOSSLESS 2
 
+// static const int *hf_webp_header_fields[] = {
+//     &hf_webp_frame_type,
+//     NULL
+// };
+
+static const value_string frame_type_vals[] = {
+    { 0, "key frame" },
+    { 1, "interframe" },
+    { 0, NULL }
+};
 
 static guint webp_subtype(tvbuff_t *tvb, guint* offset, packet_info *pinfo)
 {
@@ -51,6 +66,8 @@ static gint dissect_webp(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, vo
     proto_tree* webp_tree;
     guint offset = 0;
     dissector_handle_t vp8_handle;
+    // gint size = -1;
+    // guint frametype = 0;
 
     col_set_str(pinfo->cinfo, COL_PROTOCOL, "WEBP");
     col_clear(pinfo->cinfo, COL_INFO);
@@ -58,10 +75,10 @@ static gint dissect_webp(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, vo
     ti = proto_tree_add_item(tree, proto_webp, tvb, 0, -1, ENC_NA);
     webp_tree = proto_item_add_subtree(ti, ett_webp);
 
-    proto_tree_add_item(webp_tree, hf_riff_marker, tvb, offset, 4, ENC_ASCII|ENC_NA);
+    proto_tree_add_item(webp_tree, hf_webp_riff_marker, tvb, offset, 4, ENC_ASCII|ENC_NA);
     offset += 4;
 
-    proto_tree_add_item(webp_tree, hf_file_size, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(webp_tree, hf_webp_file_size, tvb, offset, 4, ENC_LITTLE_ENDIAN);
     offset += 4;
 
     proto_tree_add_item(webp_tree, hf_webp_marker, tvb, offset, 4, ENC_ASCII|ENC_NA);
@@ -71,8 +88,11 @@ static gint dissect_webp(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, vo
 
     switch(webp_subtype(tvb, &offset, pinfo)) {
         case SUBTYPE_LOSSY:
+            // proto_tree_add_bitmask(webp_tree, tvb, offset, hf_webp_header, ett_header, hf_webp_header_fields, ENC_BIG_ENDIAN);
             vp8_handle = find_dissector("vp8");
-            // call_dissector(vp8_handle, tvb_new_subset_remaining(tvb, offset), pinfo, webp_tree);
+            call_dissector(vp8_handle, tvb_new_subset_remaining(tvb, offset), pinfo, webp_tree);
+            // offset += 4 + 3;
+            // dissect_vp8_payload(tvb, pinfo, webp_tree, &offset, &frametype, &size);
             break;
         case SUBTYPE_LOSSLESS:
             g_print("SUBTYPE LOSSLESS\n");
@@ -98,7 +118,7 @@ void proto_register_webp(void)
      */
     static hf_register_info hf[] = {
         /* Marker */
-        { &hf_riff_marker,
+        { &hf_webp_riff_marker,
             {   "Webp RIFF marker",
                 "webp.riff_marker",
                 FT_STRING, BASE_NONE,
@@ -107,7 +127,7 @@ void proto_register_webp(void)
                 HFILL
             }
         },
-        { &hf_file_size,
+        { &hf_webp_file_size,
             {   "Webp File size",
                 "webp.file_size",
                 FT_INT32, BASE_DEC,
@@ -133,12 +153,33 @@ void proto_register_webp(void)
                 "The marker of the WEBP subtype",
                 HFILL
             }
+        },
+        { &hf_webp_header,
+            {   "Webp Header",
+                "webp.header",
+                FT_UINT24,
+                BASE_HEX,
+                0x0, 0x0,
+                NULL,
+                HFILL
+            }
+        },
+        { &hf_webp_frame_type,
+            {   "Webp frame type",
+                "webp.frame_type",
+                FT_UINT8,
+                BASE_DEC,
+                VALS(frame_type_vals),
+                0x80, NULL,
+                HFILL
+            }
         }
     };
 
     /* Setup protocol subtree array */
     static gint *ett[] = {
-        &ett_webp
+        &ett_webp,
+        &ett_header
     };
 
     proto_register_subtree_array(ett, array_length(ett));
