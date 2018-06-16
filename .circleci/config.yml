@@ -1,0 +1,19 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: crondaemon/wireshark
+    steps:
+      - checkout
+      - run:
+          name: Install packages
+          command: tools/debian-setup.sh --install-optional -y
+      - run:
+          name: Run cmake
+          command: cmake -GNinja .
+      - run:
+          name: Build
+          command: ninja
+      - run:
+          name: Build tests
+          command: ninja test-programs
