@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build:
+  normal:
     docker:
       - image: crondaemon/wireshark
     steps:
@@ -15,5 +15,31 @@ jobs:
           name: Build
           command: ninja
       - run:
+          name: Build rpm
+          command: ninja rpm-package
+  fedora:
+    docker:
+      - image: fedora:28
+    steps:
+      - run:
+          name: Install required packages
+          command: yum install git which -y
+      - checkout
+      - run:
+          name: Install packages
+          command: tools/rpm-setup.sh --install-optional -y
+      - run:
+          name: Run cmake
+          command: cmake -GNinja .
+      - run:
+          name: Build
+          command: ninja
+      - run:
           name: Build tests
           command: ninja test-programs
+workflows:
+  version: 2
+  mybuilds:
+    jobs:
+      - normal
+      - fedora
