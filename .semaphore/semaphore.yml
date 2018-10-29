@@ -1,0 +1,55 @@
+version: v1.0
+name: Wireshark build
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+
+blocks:
+  - name: Build
+    task:
+      jobs:
+        - name: debian
+          commands:
+            - sem-version c 8
+            - checkout
+            - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 23E7166788B63E1E
+            - sudo tools/debian-setup.sh --install-optional --install-deb-deps -y
+            - dpkg-buildpackage -us -uc -rfakeroot -j$(nproc)
+        - name: gcc-8
+          commands:
+            - sem-version c 8
+            - checkout
+            - sudo tools/debian-setup.sh --install-optional python3-pytest python3-pytest-xdist -y
+            - mkdir build
+            - cd build
+            - cmake -GNinja ..
+            - ninja
+            - ninja test-programs
+            - pytest-3 -nauto -v ../test
+        - name: clang-7
+          commands:
+            - checkout
+            - wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
+            - echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-7 main" | sudo tee /etc/apt/sources.list.d/clang.list
+            - sudo apt update
+            - sudo tools/debian-setup.sh --install-optional python3-pytest python3-pytest-xdist clang-7 lldb-7 lld-7 -y
+            - mkdir build
+            - cd build
+            - cmake -GNinja -DCMAKE_C_COMPILER=clang-7 -DCMAKE_CXX_COMPILER=clang++-7 ..
+            - ninja
+            - ninja test-programs
+            - pytest-3 -nauto -v ../test
+        - name: clang-7 asan
+          commands:
+            - checkout
+            - wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
+            - echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-7 main" | sudo tee /etc/apt/sources.list.d/clang.list
+            - sudo apt update
+            - sudo tools/debian-setup.sh --install-optional python3-pytest python3-pytest-xdist clang-7 lldb-7 lld-7 -y
+            - mkdir build
+            - cd build
+            - cmake -GNinja -DCMAKE_C_COMPILER=clang-7 -DCMAKE_CXX_COMPILER=clang++-7 -DENABLE_ASAN=1 ..
+            - ninja
+            - ninja test-programs
+            - ASAN_OPTIONS=detect_leaks=0 pytest-3 -nauto -v ../test
