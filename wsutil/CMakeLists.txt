@@ -270,6 +270,7 @@ target_link_libraries(wsutil
 	${GCRYPT_LIBRARIES}
 	${WIN_WSOCK32_LIBRARY}
 	${GNUTLS_LIBRARIES}
+	${M_LIBRARIES}
 )
 
 if(WIN32)

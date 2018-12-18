@@ -449,6 +449,7 @@ dissect_frame(tvbuff_t *tvb, packet_info *pinfo, proto_tree *parent_tree, void* 
 			proto_tree_add_int(fh_tree, hf_frame_wtap_encap, tvb, 0, 0, pinfo->rec->rec_header.packet_header.pkt_encap);
 
 		if (pinfo->presence_flags & PINFO_HAS_TS) {
+			gchar* rel_ts_str;
 			proto_tree_add_time(fh_tree, hf_frame_arrival_time, tvb,
 					    0, 0, &(pinfo->abs_ts));
 			if (pinfo->abs_ts.nsecs < 0 || pinfo->abs_ts.nsecs >= 1000000000) {
@@ -488,6 +489,9 @@ dissect_frame(tvbuff_t *tvb, packet_info *pinfo, proto_tree *parent_tree, void* 
 
 			item = proto_tree_add_time(fh_tree, hf_frame_time_relative, tvb,
 						   0, 0, &(pinfo->rel_ts));
+			rel_ts_str = distance_of_time_in_words(0, pinfo->rel_ts.secs, TRUE);
+			proto_item_append_text(item, " (%s)", rel_ts_str);
+			g_free(rel_ts_str);
 			PROTO_ITEM_SET_GENERATED(item);
 
 			if (pinfo->fd->flags.ref_time) {

@@ -13,6 +13,7 @@
 
 #include <glib.h>
 #include "ws_symbol_export.h"
+#include <math.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -106,6 +107,11 @@ typedef enum {
  */
 WS_DLL_PUBLIC
 gchar *format_size(gint64 size, format_size_flags_e flags);
+
+/** XXX
+ */
+WS_DLL_PUBLIC
+gchar *distance_of_time_in_words(guint32 from_time, guint32 to_time, gboolean include_seconds);
 
 WS_DLL_PUBLIC
 gchar printable_char_or_period(gchar c);

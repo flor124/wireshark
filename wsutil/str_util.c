@@ -203,6 +203,167 @@ format_size(gint64 size, format_size_flags_e flags)
 	return g_strchomp(ret_val);
 }
 
+#define MINUTES_IN_YEAR 525600
+#define MINUTES_IN_QUARTER_YEAR 131400
+#define MINUTES_IN_THREE_QUARTERS_YEAR 394200
+
+#define RANGE_INCLUDE(var, start, stop) ((var) >= (start) && (var) <= (stop))
+
+static gchar *basic_elapsed_print(const gchar *prefix, const gchar *unit, const guint value)
+{
+	return g_strdup_printf("%s%s%u %s%s", prefix, strlen(prefix) > 0 ? " " : "", value, unit, value > 1 ? "s" : "");
+}
+
+static gchar *less_than(const gchar *unit, const guint value)
+{
+	return basic_elapsed_print("less than", unit, value);
+}
+
+static gchar *less_than_x_seconds(const guint seconds)
+{
+	return less_than("second", seconds);
+}
+
+static gchar *less_than_x_minutes(const guint minutes)
+{
+	return less_than("minute", minutes);
+}
+
+static gchar *half_a_minute(void)
+{
+	return g_strdup("half a minute");
+}
+
+static gchar *x_units(const gchar *unit, const guint value)
+{
+	return basic_elapsed_print("", unit, value);
+}
+
+static gchar *x_minutes(const guint minutes)
+{
+	return x_units("minute", minutes);
+}
+
+static gchar *about_x(const gchar *unit, const guint value)
+{
+	return basic_elapsed_print("about", unit, value);
+}
+
+static gchar *about_x_hours(const guint hours)
+{
+	return about_x("hour", hours);
+}
+
+static gchar *x_days(const guint days)
+{
+	return x_units("day", days);
+}
+
+static gchar *about_x_months(const guint months)
+{
+	return about_x("month", months);
+}
+
+static gchar *x_months(const guint months)
+{
+	return x_units("month", months);
+}
+
+static gchar *about_x_years(const guint years)
+{
+	return about_x("years", years);
+}
+
+static gchar *almost_x_years(const guint years)
+{
+	return basic_elapsed_print("almost", "years", years);
+}
+
+static gchar *over_x_years(const guint years)
+{
+	return basic_elapsed_print("over", "years", years);
+}
+
+static gboolean is_leap_year(const guint year)
+{
+	return (year % 4 == 0) && (year % 100 == 0);
+}
+
+/* This function is taken from Rails core (actionview) and converted into C */
+/* https://github.com/rails/rails/blob/master/actionview/lib/action_view/helpers/date_helper.rb */
+gchar *distance_of_time_in_words(guint32 from_time, guint32 to_time, gboolean include_seconds)
+{
+	g_assert(from_time <= to_time);
+
+	double distance_in_minutes = round((float)(to_time - from_time) / 60.0);
+	guint32 distance_in_seconds = (to_time - from_time);
+
+	if (distance_in_minutes <= 1) {
+		if (!include_seconds)
+			return less_than_x_minutes(1);
+		if (distance_in_seconds < 4)
+			return less_than_x_seconds(5);
+		else if (RANGE_INCLUDE(distance_in_seconds, 5, 9))
+			return less_than_x_seconds(10);
+		else if (RANGE_INCLUDE(distance_in_seconds, 10, 19))
+			return less_than_x_seconds(20);
+		else if (RANGE_INCLUDE(distance_in_seconds, 20, 39))
+			return half_a_minute();
+		else if (RANGE_INCLUDE(distance_in_seconds, 40, 59))
+			return less_than_x_minutes(1);
+		else
+			return x_minutes(1);
+	} else if (RANGE_INCLUDE(distance_in_minutes, 2, 44)) {
+		return x_minutes(distance_in_minutes);
+	} else if (RANGE_INCLUDE(distance_in_minutes, 45, 89)) {
+		return about_x_hours(1);
+	} else if (RANGE_INCLUDE(distance_in_minutes, 90, 1439)) {
+		return about_x_hours(round((float)distance_in_minutes / 60));
+	} else if (RANGE_INCLUDE(distance_in_minutes, 1440, 2519)) {
+		return x_days(1);
+	} else if (RANGE_INCLUDE(distance_in_minutes, 2520, 43199)) {
+		return x_days(round((float)distance_in_minutes / 1440));
+	} else if (RANGE_INCLUDE(distance_in_minutes, 43200, 86399)) {
+		return about_x_months(round((float)distance_in_minutes / 43200));
+	} else if (RANGE_INCLUDE(distance_in_minutes, 86400, 525600)) {
+		return x_months(round((float)distance_in_minutes / 43200));
+	} else {
+		struct tm* from_time_tm = gmtime((time_t*)&from_time);
+		struct tm* to_time_tm = gmtime((time_t*)&to_time);
+
+		guint from_year = from_time_tm->tm_year;
+		guint to_year = to_time_tm->tm_year;
+		guint leap_years = 0;
+		guint minute_offset_for_leap_year;
+		guint minutes_with_offset;
+		guint remainder;
+		guint distance_in_years;
+		guint i;
+
+		if (from_time_tm->tm_mon >= 3)
+			from_year += 1;
+		if (to_time_tm->tm_mon < 3)
+			to_year -= 1;
+
+		for (i = from_year; i <= to_year; i++) {
+			if (is_leap_year(i))
+				leap_years += 1;
+		}
+
+		minute_offset_for_leap_year = leap_years * 1440;
+		minutes_with_offset = distance_in_minutes - minute_offset_for_leap_year;
+		remainder = (minutes_with_offset % MINUTES_IN_YEAR);
+		distance_in_years = (minutes_with_offset / MINUTES_IN_YEAR);
+
+		if (remainder < MINUTES_IN_QUARTER_YEAR)
+			return about_x_years(distance_in_years);
+		else if (remainder < MINUTES_IN_THREE_QUARTERS_YEAR)
+			return over_x_years(distance_in_years);
+		else
+			return almost_x_years(distance_in_years + 1);
+	}
+}
+
 gchar
 printable_char_or_period(gchar c)
 {
