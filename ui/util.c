@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <stdio.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -30,6 +31,9 @@
 
 #include "ui/util.h"
 
+/* Maximum size of a filter passed by stdin (10k) */
+#define MAX_STDIN_FILTER_SIZE 10 * 1024
+
 /*
  * Collect command-line arguments as a string consisting of the arguments,
  * separated by spaces.
@@ -40,6 +44,22 @@ get_args_as_string(int argc, char **argv, int optindex)
     int len;
     int i;
     char *argstring;
+
+    if (argc == 2 && !g_strcmp0("-", argv[1])) {
+        guint offset = 0;
+        gchar c;
+        gchar* buffer = (gchar*)g_malloc(MAX_STDIN_FILTER_SIZE);
+        while((c = getchar()) != EOF && offset < MAX_STDIN_FILTER_SIZE) {
+            if (c == 0x0a)
+                continue;
+            buffer[offset] = c;
+            offset++;
+        }
+        if (offset == MAX_STDIN_FILTER_SIZE)
+            g_error("Maximum size for filter reached (%u)", MAX_STDIN_FILTER_SIZE);
+        buffer[offset] = '\0';
+        return buffer;
+    }
 
     /*
      * Find out how long the string will be.
