@@ -212,7 +212,6 @@ typedef enum {
 } cap_pipe_err_t;
 
 typedef struct _pcap_pipe_info {
-    gboolean                     byte_swapped; /**< TRUE if data in the pipe is byte swapped. */
     struct pcap_hdr              hdr;          /**< Pcap header when capturing from a pipe */
     struct pcaprec_modified_hdr  rechdr;       /**< Pcap record header when capturing from a pipe */
 } pcap_pipe_info_t;
@@ -245,6 +244,7 @@ typedef struct _capture_src {
     gboolean                     from_cap_pipe;          /**< TRUE if we are capturing data from a capture pipe */
     gboolean                     from_cap_socket;        /**< TRUE if we're capturing from socket */
     gboolean                     from_pcapng;            /**< TRUE if we're capturing from pcapng format */
+    gboolean                     byte_swapped;          /**< TRUE if data in the pipe is byte swapped. */
     union {
         pcap_pipe_info_t         pcap;                   /**< Pcap info when capturing from a pipe */
         pcapng_pipe_info_t       pcapng;                 /**< Pcapng info when capturing from a pipe */
@@ -1767,7 +1767,6 @@ cap_pipe_open_live(char *pipename,
                 /* jump messaging, if extcap had an error, stderr will provide the correct message */
                 if (extcap_pipe && b <= 0)
                     goto error;
-
                 if (b <= 0) {
                     if (b == 0)
                         g_snprintf(errmsg, (gulong)errmsgl,
@@ -1814,14 +1813,14 @@ cap_pipe_open_live(char *pipename,
     case PCAP_NSEC_MAGIC:
         /* Host that wrote it has our byte order, and was running
            a program using either standard or ss990417 libpcap. */
-        pcap_src->cap_pipe_info.pcap.byte_swapped = FALSE;
+        pcap_src->byte_swapped = FALSE;
         pcap_src->cap_pipe_modified = FALSE;
         pcap_src->ts_nsec = magic == PCAP_NSEC_MAGIC;
         break;
     case PCAP_MODIFIED_MAGIC:
         /* Host that wrote it has our byte order, but was running
            a program using either ss990915 or ss991029 libpcap. */
-        pcap_src->cap_pipe_info.pcap.byte_swapped = FALSE;
+        pcap_src->byte_swapped = FALSE;
         pcap_src->cap_pipe_modified = TRUE;
         break;
     case PCAP_SWAPPED_MAGIC:
@@ -1829,7 +1828,7 @@ cap_pipe_open_live(char *pipename,
         /* Host that wrote it has a byte order opposite to ours,
            and was running a program using either standard or
            ss990417 libpcap. */
-        pcap_src->cap_pipe_info.pcap.byte_swapped = TRUE;
+        pcap_src->byte_swapped = TRUE;
         pcap_src->cap_pipe_modified = FALSE;
         pcap_src->ts_nsec = magic == PCAP_SWAPPED_NSEC_MAGIC;
         break;
@@ -1837,7 +1836,7 @@ cap_pipe_open_live(char *pipename,
         /* Host that wrote it out has a byte order opposite to
            ours, and was running a program using either ss990915
            or ss991029 libpcap. */
-        pcap_src->cap_pipe_info.pcap.byte_swapped = TRUE;
+        pcap_src->byte_swapped = TRUE;
         pcap_src->cap_pipe_modified = TRUE;
         break;
     case BLOCK_TYPE_SHB:
@@ -1936,7 +1935,7 @@ pcap_pipe_open_live(int fd,
     }
 #endif
 
-    if (pcap_src->cap_pipe_info.pcap.byte_swapped) {
+    if (pcap_src->byte_swapped) {
         /* Byte-swap the header fields about which we care. */
         hdr->version_major = GUINT16_SWAP_LE_BE(hdr->version_major);
         hdr->version_minor = GUINT16_SWAP_LE_BE(hdr->version_minor);
@@ -2032,43 +2031,8 @@ pcapng_read_shb(capture_src *pcap_src,
         break;
     case PCAPNG_SWAPPED_MAGIC:
         g_log(LOG_DOMAIN_CAPTURE_CHILD, G_LOG_LEVEL_DEBUG, "pcapng SHB SWAPPED MAGIC");
-        /*
-         * pcapng sources can contain all sorts of block types.
-         * Rather than add a bunch of complexity to this code (which is
-         * often privileged), punt and tell the user to swap bytes
-         * elsewhere.
-         *
-         * XXX - punting means that the Wireshark test suite must be
-         * modified to:
-         *
-         *  1) have both little-endian and big-endian versions of
-         *     all pcapng files piped to dumpcap;
-         *
-         *  2) pipe the appropriate file to dumpcap, depending on
-         *     the byte order of the host on which the tests are
-         *     being run;
-         *
-         * as per comments in bug 15772 and 15754.
-         *
-         * Are we *really* certain that the complexity added would be
-         * significant enough to make adding it a security risk?  And
-         * why would this code even be running with any elevated
-         * privileges if you're capturing from a pipe?  We should not
-         * only have given up all additional privileges if we're reading
-         * from a pipe, we should give them up in such a fashion that
-         * we can't reclaim them.
-         */
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-#define OUR_ENDIAN "big"
-#define IFACE_ENDIAN "little"
-#else
-#define OUR_ENDIAN "little"
-#define IFACE_ENDIAN "big"
-#endif
-        g_snprintf(errmsg, (gulong)errmsgl,
-                   "Interface %u is " IFACE_ENDIAN " endian but we're " OUR_ENDIAN " endian.",
-                   pcap_src->interface_id);
-        return -1;
+        pcap_src->byte_swapped = TRUE;
+        break;
     default:
         /* Not a pcapng type we know about, or not pcapng at all. */
         g_snprintf(errmsg, (gulong)errmsgl,
@@ -2229,6 +2193,11 @@ pcapng_pipe_open_live(int fd,
         goto error;
     }
 
+    if (pcap_src->byte_swapped) {
+        bh->block_type = GUINT32_SWAP_LE_BE(bh->block_type);
+        bh->block_total_length = GUINT32_SWAP_LE_BE(bh->block_total_length);
+    }
+
     return;
 
 error:
@@ -2386,7 +2355,7 @@ pcap_pipe_dispatch(loop_data *ld, capture_src *pcap_src, char *errmsg, size_t er
 
     case PD_REC_HDR_READ:
         /* We've read the header. Take care of byte order. */
-        cap_pipe_adjust_pcap_header(pcap_src->cap_pipe_info.pcap.byte_swapped, &pcap_info->hdr,
+        cap_pipe_adjust_pcap_header(pcap_src->byte_swapped, &pcap_info->hdr,
                                &pcap_info->rechdr.hdr);
         if (pcap_info->rechdr.hdr.incl_len > pcap_src->cap_pipe_max_pkt_size) {
             /*
@@ -2538,6 +2507,10 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcap_src, char *errmsg, size_t 
             return 0;
         }
         memcpy(bh, pcap_src->cap_pipe_databuf, sizeof(pcapng_block_header_t));
+        if (pcap_src->byte_swapped) {
+            bh->block_type = GUINT32_SWAP_LE_BE(bh->block_type);
+            bh->block_total_length = GUINT32_SWAP_LE_BE(bh->block_total_length);
+        }
         result = PD_REC_HDR_READ;
         break;
 
@@ -2613,7 +2586,6 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcap_src, char *errmsg, size_t 
             pcapng_read_shb(pcap_src, errmsg, errmsgl);
             return 1;
         }
-
         if (bh->block_total_length > pcap_src->cap_pipe_max_pkt_size) {
             /*
             * The record contains more data than the advertised/allowed in the
