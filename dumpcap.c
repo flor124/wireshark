@@ -95,7 +95,7 @@
 #include "wiretap/pcapng_module.h"
 #include "wiretap/pcapng.h"
 
-/**#define DEBUG_DUMPCAP**/
+#define DEBUG_DUMPCAP
 /**#define DEBUG_CHILD_DUMPCAP**/
 
 #ifdef _WIN32
@@ -2027,9 +2027,11 @@ pcapng_read_shb(capture_src *pcap_src,
     switch (shb.magic)
     {
     case PCAPNG_MAGIC:
+        g_print("DRITTO\n");
         g_log(LOG_DOMAIN_CAPTURE_CHILD, G_LOG_LEVEL_DEBUG, "pcapng SHB MAGIC");
         break;
     case PCAPNG_SWAPPED_MAGIC:
+        g_print("ROVESCIO\n");
         g_log(LOG_DOMAIN_CAPTURE_CHILD, G_LOG_LEVEL_DEBUG, "pcapng SHB SWAPPED MAGIC");
         pcap_src->byte_swapped = TRUE;
         break;
@@ -2055,6 +2057,7 @@ pcapng_read_shb(capture_src *pcap_src,
 static gboolean
 pcapng_adjust_block(capture_src *pcap_src, const pcapng_block_header_t *bh, u_char *pd)
 {
+    g_print("XXXXXXXXX pcapng_adjust_block %u\n", bh->block_type);
     switch(bh->block_type) {
     case BLOCK_TYPE_SHB:
     {
@@ -2116,6 +2119,7 @@ pcapng_adjust_block(capture_src *pcap_src, const pcapng_block_header_t *bh, u_ch
     case BLOCK_TYPE_EPB:
     case BLOCK_TYPE_ISB:
     {
+        g_print("OK QUI ANCORA\n");
         if (global_ld.pcapng_passthrough) {
             /* Our input and output interface IDs are the same. */
             break;
@@ -2404,6 +2408,7 @@ pcap_pipe_dispatch(loop_data *ld, capture_src *pcap_src, char *errmsg, size_t er
          */
         /* FALLTHROUGH */
     case PD_DATA_READ:
+        g_print("DATA READ 1\n");
         /* Fill in a "struct pcap_pkthdr", and process the packet. */
         phdr.ts.tv_sec = pcap_info->rechdr.hdr.ts_sec;
         phdr.ts.tv_usec = pcap_info->rechdr.hdr.ts_usec;
@@ -2629,7 +2634,17 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcap_src, char *errmsg, size_t 
         return 0;
 
     case PD_DATA_READ:
+        g_print("DATA READ 2\n");
+        if (pcap_src->byte_swapped && !ld->pcapng_passthrough) {
+            g_print("SWAPPO 2\n");
+            pcapng_block_header_t* bhl = (pcapng_block_header_t*)pcap_src->cap_pipe_databuf;
+            bhl->block_type = GUINT32_SWAP_LE_BE(bhl->block_type);
+            bhl->block_total_length = GUINT32_SWAP_LE_BE(bhl->block_total_length);
+        } else {
+            g_print("NO SWAPPO\n");
+        }
         if (use_threads) {
+            g_print("DDDDDDDDDDDDD\n");
             capture_loop_queue_pcapng_cb(pcap_src, bh, pcap_src->cap_pipe_databuf);
         } else {
             capture_loop_write_pcapng_cb(pcap_src, bh, pcap_src->cap_pipe_databuf);
@@ -2974,6 +2989,7 @@ capture_loop_init_pcapng_output(capture_options *capture_opts, loop_data *ld)
 
         memcpy(&bh, ld->saved_shb, sizeof(pcapng_block_header_t));
 
+        g_print("bonzo 2 %u\n", bh.block_total_length);
         successful = pcapng_write_block(ld->pdh, ld->saved_shb, bh.block_total_length, &ld->bytes_written, &err);
 
         g_log(LOG_DOMAIN_CAPTURE_CHILD, G_LOG_LEVEL_DEBUG, "%s: wrote saved passthrough SHB %d", G_STRFUNC, successful);
@@ -3009,6 +3025,7 @@ capture_loop_init_pcapng_output(capture_options *capture_opts, loop_data *ld)
              * It might make more sense to write the original data so that
              * so that our IDB lists are more consistent across files.
              */
+            g_print("SCRIVO IDB\n");
             successful = pcapng_write_interface_description_block(global_ld.pdh,
                                                                   "Interface went out of scope",    /* OPT_COMMENT       1 */
                                                                   "dummy",                          /* IDB_NAME          2 */
@@ -3023,6 +3040,7 @@ capture_loop_init_pcapng_output(capture_options *capture_opts, loop_data *ld)
                                                                   &global_ld.err);
             g_log(LOG_DOMAIN_CAPTURE_CHILD, G_LOG_LEVEL_DEBUG, "%s: skipping deleted pcapng IDB %u", G_STRFUNC, i);
         } else if (idb_source.idb && idb_source.idb_len) {
+            g_print("bonzo 3 %u\n", idb_source.idb_len);
             successful = pcapng_write_block(global_ld.pdh, idb_source.idb, idb_source.idb_len, &ld->bytes_written, &err);
             g_log(LOG_DOMAIN_CAPTURE_CHILD, G_LOG_LEVEL_DEBUG, "%s: wrote pcapng IDB %d", G_STRFUNC, successful);
         } else if (idb_source.interface_id < capture_opts->ifaces->len) {
@@ -3034,6 +3052,7 @@ capture_loop_init_pcapng_output(capture_options *capture_opts, loop_data *ld)
             } else {
                 pcap_src->snaplen = pcap_snapshot(pcap_src->pcap_h);
             }
+            g_print("SCRIVO IDB %s\n", interface_opts->name);
             successful = pcapng_write_interface_description_block(global_ld.pdh,
                                                                   NULL,                       /* OPT_COMMENT       1 */
                                                                   interface_opts->name,       /* IDB_NAME          2 */
@@ -4071,6 +4090,7 @@ capture_loop_start(capture_options *capture_opts, gboolean *stats_known, struct 
     if (global_ld.err == 0) {
         write_ok = TRUE;
     } else {
+        g_print("eeeeeeeeeeeeeeeeeeeeeeeeeee 1\n");
         capture_loop_get_errmsg(errmsg, sizeof(errmsg), secondary_errmsg,
                                 sizeof(secondary_errmsg),
                                 capture_opts->save_file, global_ld.err, FALSE);
@@ -4095,6 +4115,7 @@ capture_loop_start(capture_options *capture_opts, gboolean *stats_known, struct 
     /* If we've displayed a message about a write error, there's no point
        in displaying another message about an error on close. */
     if (!close_ok && write_ok) {
+        g_print("eeeeeeeeeeeeeeeeeeeeeeeeeee 2\n");
         capture_loop_get_errmsg(errmsg, sizeof(errmsg), secondary_errmsg,
                                 sizeof(secondary_errmsg),
                                 capture_opts->save_file, err_close, TRUE);
@@ -4326,6 +4347,7 @@ capture_loop_write_pcapng_cb(capture_src *pcap_src, const pcapng_block_header_t 
 
         fflush(global_ld.pdh);
         if (!successful) {
+            g_print("qui errore\n");
             global_ld.go = FALSE;
             global_ld.err = err;
             pcap_src->dropped++;
@@ -4466,6 +4488,7 @@ capture_loop_queue_pcapng_cb(capture_src *pcap_src, const pcapng_block_header_t 
     pcap_queue_element *queue_element;
     gboolean            limit_reached;
 
+    g_print("CLOCCO\n");
     /* We may be called multiple times from pcap_dispatch(); if we've set
        the "stop capturing" flag, ignore this packet, as we're not
        supposed to be saving any more packets. */
@@ -4481,6 +4504,7 @@ capture_loop_queue_pcapng_cb(capture_src *pcap_src, const pcapng_block_header_t 
     }
     queue_element->pcap_src = pcap_src;
     queue_element->u.bh = *bh;
+    g_print("22222222222 %u %u %u %u\n", pcap_src->byte_swapped, bh->block_type, GUINT32_SWAP_LE_BE(bh->block_type), bh->block_total_length);
     queue_element->pd = (u_char *)g_malloc(bh->block_total_length);
     if (queue_element->pd == NULL) {
         pcap_src->dropped++;

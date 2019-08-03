@@ -738,6 +738,7 @@ pcapng_read_if_descr_block(wtap *wth, FILE_T fh, pcapng_block_header_t *bh,
     gchar* tmp_content;
     guint64 tmp64;
 
+    g_print("wwwwwwwwwww %u\n", bh->block_type);
     /*
      * Is this block long enough to be an IDB?
      */
@@ -2528,6 +2529,7 @@ pcapng_read_block(wtap *wth, FILE_T fh, pcapng_t *pn, wtapng_block_t *wblock, in
         if (pn->byte_swapped) {
             bh.block_type         = GUINT32_SWAP_LE_BE(bh.block_type);
             bh.block_total_length = GUINT32_SWAP_LE_BE(bh.block_total_length);
+            block_total_length = bh.block_total_length;
         }
 
         wblock->type = bh.block_type;
@@ -2610,8 +2612,10 @@ pcapng_read_block(wtap *wth, FILE_T fh, pcapng_t *pn, wtapng_block_t *wblock, in
         return PCAPNG_BLOCK_ERROR;
     }
 
-    if (pn->byte_swapped)
-        block_total_length = GUINT32_SWAP_LE_BE(block_total_length);
+    //if (pn->byte_swapped)
+    g_print("RERERERER1 %u %u\n", pn->byte_swapped, block_total_length);
+      //lock_total_length = GUINT32_SWAP_LE_BE(block_total_length);
+    //g_print("RERERERER2 %u %u\n", pn->byte_swapped, block_total_length);
 
     if (block_total_length != bh.block_total_length) {
         *err = WTAP_ERR_BAD_FILE;

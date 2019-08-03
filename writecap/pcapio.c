@@ -281,6 +281,7 @@ pcapng_write_block(FILE* pfile,
                    int *err)
 {
     guint32 block_length, end_length;
+    g_print("ZIO BUDINO\n");
     /* Check
      * - length and data are aligned to 4 bytes
      * - block_total_length field is the same at the start and end of the block
@@ -291,14 +292,17 @@ pcapng_write_block(FILE* pfile,
      */
     if (((length & 3) != 0) || (((gintptr)data & 3) != 0)) {
         *err = EINVAL;
+        g_print("ESCO PORCO 1\n");
         return FALSE;
     }
     block_length = *(const guint32 *) (data+sizeof(guint32));
     end_length = *(const guint32 *) (data+length-sizeof(guint32));
     if (block_length != end_length) {
         *err = EBADMSG;
-        return FALSE;
+        g_print("ESCO PORCO 2 %u %u %u\n", length, block_length, end_length);
+        //return FALSE;
     }
+    g_print("BORZONE %u\n", length);
     return write_to_file(pfile, data, length, bytes_written, err);
 }
 
